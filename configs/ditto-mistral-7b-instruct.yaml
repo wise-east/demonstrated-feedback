@@ -21,7 +21,8 @@ logging_steps: 1
 max_length: 2048
 max_prompt_length: 512
 
-per_device_train_batch_size: 4
+# batch size for SFT 
+per_device_train_batch_size: 1
 push_to_hub: false
 seed: 42
 
@@ -39,6 +40,7 @@ learning_rate: 3.0e-5
 max_steps: 30
 lr_scheduler_type: cosine
 warmup_ratio: 0.2
+train_instances: 7
 
 # if a batch gets < 1.00 loss, let's stop
 sft_stop_loss: 1.00
@@ -49,7 +51,8 @@ ditto_lr_scheduler_type: constant_with_warmup
 ditto_warmup_ratio: 0.25
 
 # effective batch size is approx 8 * 3, might be less in earlier iterations
-ditto_per_device_train_batch_size: 8
+ditto_per_device_train_batch_size: 2
+ditto_gradient_accumulation_steps: 1
 rescale_batch: 3
 
 remove_unused_columns: true

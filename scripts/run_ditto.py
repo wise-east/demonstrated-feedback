@@ -108,7 +108,9 @@ class DittoConfig(DPOConfig):
     ditto_per_device_train_batch_size: Optional[int] = field(
         default=8,
     )
-
+    ditto_gradient_accumulation_steps: Optional[int] = field(
+        default=1,
+    )
 
     frac_expert: Optional[float] = field(
         default=None,
@@ -136,7 +138,7 @@ class DittoConfig(DPOConfig):
         default=0
     )
     train_instances: Optional[int] = field(
-        default=None
+        default=7 # set to value mentioned in paper (section 4.1)
     )
     train_pkl: str = field(
         default=None
@@ -376,6 +378,7 @@ def main():
     training_args.lr_scheduler_type = training_args.ditto_lr_scheduler_type
     training_args.warmup_ratio = training_args.ditto_warmup_ratio
     training_args.per_device_train_batch_size = training_args.ditto_per_device_train_batch_size
+    training_args.gradient_accumulation_steps = training_args.ditto_gradient_accumulation_steps
 
     model.add_adapter("ditto", lora_config)
     model.set_adapter("ditto")
