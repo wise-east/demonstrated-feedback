@@ -6,9 +6,23 @@ import pickle
 import pdb
 import pandas as pd
 import argparse
-from iota.prompts import form_few_shot_prompt
+from typing import List, Tuple
 
 MISTRAL_CHAT_TEMPLATE = "{{ bos_token }}{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}{% set system_message = messages[0]['content'].strip() + '\n\n' %}{% else %}{% set loop_messages = messages %}{% set system_message = '' %}{% endif %}{% for message in loop_messages %}{% if loop.index0 == 0 %}{% set content = system_message + message['content'] %}{% else %}{% set content = message['content'] %}{% endif %}{% if message['role'] == 'user' %}{{ '[INST] ' + content.strip() + ' [/INST]' }}{% elif message['role'] == 'assistant' %}{{ ' '  + content.strip() + ' ' + eos_token }}{% endif %}{% endfor %}"
+
+def form_few_shot_prompt(target_task:str, examples: List[Tuple[str,str]]) -> str: 
+
+    system_prompt = "Perform the target task while using the following examples as stylistic guides."
+
+    few_shot_example_texts_list = [] 
+    for example in examples: 
+        few_shot_example_texts_list.append(f"### Example\nTask: {example[0]}\nOutput:\n{example[1]}") 
+
+    few_shot_examples_text = "\n\n".join(few_shot_example_texts_list)
+
+    full_prompt = f"{system_prompt}\n\n{few_shot_examples_text}\n\nTarget Task: {target_task}"
+
+    return full_prompt
 
 def prepare_few_shot_prompt(prompt, train_data_path, author_key):
     with open(train_data_path, 'rb') as pickle_file:
