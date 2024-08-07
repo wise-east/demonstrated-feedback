@@ -1,4 +1,4 @@
-# run training jobs in parallel 
+# run training jobs in parallel  (reference: https://unix.stackexchange.com/questions/103920/parallelize-a-bash-for-loop)
 
 conda activate ditto
 
