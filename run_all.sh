@@ -5,8 +5,8 @@ conda activate ditto
 export HF_TOKEN=""
 
 # benchmarks=("ccat50" "cmcc" "custom")
-benchmarks=("cmcc")
-# benchmarks=("ccat50")
+# benchmarks=("cmcc")
+benchmarks=("ccat50" "cmcc" "speechpref")
 
 task() {
     benchmark=$1
@@ -32,10 +32,18 @@ task() {
 
 N=2 # set to number of gpus available / 4.
 
-# loop through 0 to 9, including 9 
+# author_ids=(0 1 2 3 4 5 6 7 8 9)
+# author ids from 0 to 9 using .. syntax
+author_ids=($(seq 0 9))
 (
 for benchmark in "${benchmarks[@]}"; do 
-    for i in {0..4}; do 
+    for i in "${author_ids[@]}"; do 
+
+        # if benchmark is speechpref, only run author 0
+        if [ "$benchmark" == "speechpref" ] && [ "$i" != "0" ]; then
+            continue
+        fi
+
         ((j=j%N)); ((j++==0)) && wait
 
         task $benchmark $i &
