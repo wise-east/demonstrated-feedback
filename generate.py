@@ -213,7 +213,7 @@ def main():
 
         outputs += task_outputs
     
-    if len(outputs) == args.num_samples * len(tasks): 
+    if len(outputs) != args.num_samples * len(tasks): 
         logger.error(f"Generated {len(outputs)} samples instead of {args.num_samples * len(tasks)}")
 
     outputs += reference_outputs
