@@ -2,13 +2,12 @@
 source ~/.bashrc
 conda activate ditto
 
-# past commands from `check_all_outputs.py`
+# paste commands from `check_all_outputs.py`
 commands_to_run=(
-        "python generate.py --benchmark cmcc --method ditto --train_author_key 9"
-        "python generate.py --benchmark cmcc --method sft --train_author_key 1"
-        "python generate.py --benchmark cmcc --method sft --train_author_key 3"
-        "python generate.py --benchmark cmcc --method sft --train_author_key 8"
-        "python generate.py --benchmark speechpref --method sft --train_author_key 0"
+        "python generate.py --benchmark ccat50 --method ditto --train_author_key 27"
+        "python generate.py --benchmark ccat50 --method ditto --train_author_key 12"
+        "python generate.py --benchmark ccat50 --method sft --train_author_key 27"
+        "python generate.py --benchmark ccat50 --method sft --train_author_key 12"
 )
 
 N=8 # cycle through gpu ids 0 to 7 and wait for every 8th command

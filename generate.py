@@ -47,6 +47,7 @@ def is_problematic_output(output: str) -> bool:
         "[/INST]",
         "INST",
         "\INST"
+        "[Inst]"
     ]
 
     if any([string in output for string in problematic_strings]):
@@ -233,8 +234,8 @@ def main():
     df = pd.read_json(all_outputs_path, lines=True)
     df.drop_duplicates(inplace=True)
 
-    # keep only the first X samples when grouped by input, model, method, benchamark, and author_id
-    df = df.groupby(["input", "model", "method", "benchmark", "author_id"]).head(args.num_samples)  
+    # keep only the last X samples when grouped by input, model, method, benchamark, and author_id
+    df = df.groupby(["input", "model", "method", "benchmark", "author_id"]).tail(args.num_samples)
     df.to_json(all_outputs_path, orient="records", lines=True)
     
     # post-processing to extract and rename target task
