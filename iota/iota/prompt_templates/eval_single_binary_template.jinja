@@ -1,0 +1,50 @@
+{% if demos|length > 1 %}
+You are an impartial evaluator. Below is a sample of an author's writing and an option for which the author is unknown.
+{% else %}
+You are an impartial evaluator. Below are samples of an author's writing and an option for which the author is unknown.
+{% endif %}
+
+# AUTHOR'S WRITING:
+{% if demos | length > 1 %}
+{% for demo in demos %}
+## EXAMPLE {{ loop.index + 1 }}:
+{{ demo }}
+
+{% endfor %} 
+{% else %}
+{{ demos[0] }}
+{% endif %}
+
+# OPTION:
+{{ text }}
+
+# TASK
+Is the OPTION likely to have been written by the author based on style similarity with the sample rather than content similarity given as AUTHOR'S WRITING above? Consider the similarity with regards to the (1) length, (2) format, (3) paragraph structure, (4) sentence structure, (5) punctuation, (6) syntax, (7) voice, and (8) diction of the author's writing, but NOT the content it covers. Penalize incoherent/odd text or formatting (e.g., random dashes, repetitive text, random signatures, etc.) that is not present in the author's writing."""
+
+{% if generate_explanation %}
+Respond only with JSON with the following format:
+{
+    "answer":  "<yes/no>"
+}
+
+ALWAYS REMAIN IMPARTIAL WHEN EVALUATING OUTPUTS.
+{% else %}
+Keep explanations concise and provide specific examples. Respond only with JSON with the following format:
+
+{
+    "explanation": {
+        "length": "<Explanation>",
+        "format": "<Explanation>",
+        "paragraph_structure": "<Explanation>",
+        "sentence_structure": "<Explanation>",
+        "punctuation": "<Explanation>",
+        "syntax": "<Explanation>",
+        "voice": "<Explanation>",
+        "diction": "<Explanation>",
+        "odd incoheret text/formatting": "<Explanation>"
+    }
+    "answer":  "<yes/no>"
+}
+
+ALWAYS REMAIN IMPARTIAL WHEN EVALUATING OUTPUTS AND PENALIZE ODD INCOHERENT TEXT.
+{% endif %}

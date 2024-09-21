@@ -1,0 +1,26 @@
+package_dir: project/GREASE-IOTA
+datapath: benchmarks
+dataset: cmcc
+author_key: 0
+
+logging_dir: logs
+output_dir: out
+
+model_type: bedrock # one of transformers, openai, bedrock 
+
+# model_name_or_path: mistral.mixtral-8x7b-instruct-v0:1 # ref: https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html
+model_name_or_path: mistral.mistral-7b-instruct-v0:2
+# model_name_or_path: anthropic.claude-3-5-sonnet-20240620-v1:0
+temperature: 1.0
+max_tokens: 4096
+top_p: 0.95
+
+num_train_epochs: 4
+train_size: -1
+num_incontext_examples: -1
+num_undesired_outputs: -1
+seed: 42
+do_eval: true
+do_predict: true
+incontext_selection_strategy: random
+generate_explanations: true

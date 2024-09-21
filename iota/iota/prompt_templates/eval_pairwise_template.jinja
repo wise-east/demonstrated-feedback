@@ -1,0 +1,53 @@
+{% if demos|length > 1 %}
+You are an impartial evaluator of style similarity. Below are samples of an author's writing and two options.
+{% else %}
+You are an impartial evaluator of style similarity. Below is a sample of an author's writing and two options.
+{% endif %}
+
+# AUTHOR'S WRITING:
+{% if demos | length > 1 %}
+{% for demo in demos %}
+## EXAMPLE {{ loop.index + 1 }}:
+{{ demo }}
+
+{% endfor %} 
+{% else %}
+{{ demos[0] }}
+{% endif %}
+
+# OPTION A:
+{{ text_a }}
+
+# OPTION B:
+{{ text_b }}
+
+# TASK
+Which option is more likely to have been written by the author based on style similarity to the samples given as AUTHOR'S WRITING above? Consider each option's similarity with regards to the (1) length, (2) format, (3) paragraph structure, (4) sentence structure, (5) punctuation, (6) syntax, (7) voice, and (8) diction of the author's writing, but NOT the content it covers. If one option has incoherent/odd text or formatting (e.g., random dashes, repetitive text, random signatures, etc.) that is not present in the author's writing while the other doesn't, it should be considered less similar. """
+
+{% if generate_explanation %}
+Keep explanations concise and provide specific examples. Respond only with JSON with the following format:
+
+{
+    "explanation": {
+        "length": "<Explanation>",
+        "format": "<Explanation>",
+        "paragraph_structure": "<Explanation>",
+        "sentence_structure": "<Explanation>",
+        "punctuation": "<Explanation>",
+        "syntax": "<Explanation>",
+        "voice": "<Explanation>",
+        "diction": "<Explanation>",
+        "odd incoheret text/formatting": "<Explanation>"
+    }
+    "answer":  "<The option more similar to the AUTHOR'S WRITING; either A or B>"
+}
+
+ALWAYS REMAIN IMPARTIAL WHEN EVALUATING OUTPUTS AND PENALIZE ODD INCOHERENT TEXT.
+{% else %}
+Respond only with JSON with the following format:
+{
+    "answer":  "<The option more similar to the AUTHOR'S WRITING; either A or B>"
+}
+
+ALWAYS REMAIN IMPARTIAL WHEN EVALUATING OUTPUTS.
+{% endif %}

@@ -1,0 +1,30 @@
+You are an editor. 
+- Your task is to analyze whether the candidate writing is stylistically consistent with the author's writing(s) and if not, highlight elements of the author's style that are not observed in the candidate writing. 
+- Consider similarity with regards to the (1) length, (2) format, (3) paragraph structure, (4) sentence structure, (5) punctuation, (6) syntax, (7) voice, and (8) diction of the author's writing, but NOT the content it covers. 
+- Use the minimum words possible in your analysis while providing specific examples of how the observed inconsistencies must be edited to become stylistically consistent with the author's writing. 
+- If the candidate writing is stylistically consistent with the author's writing, respond with "yes" in the "is_consistent" field. Otherwise, respond with "no". 
+
+{% if use_other_examples %}
+{% for example in examples %}
+# AUTHOR'S OTHER WRITING SAMPLES 
+## {{ desired_output_alias }} {{ loop.index + 1 }}
+{{ example["task"]}}
+{{ example["reference_output"] }}
+
+{% endfor %}
+{% endif %}
+# Task 
+{{ task }}
+
+# Author's writing 
+{{ reference_text }}
+
+# Candidate writing to edit
+{{ generated_text }}
+
+Respond only with JSON with the following format:
+
+{
+    "explanation": "<style analysis and suggested edits>",
+    "is_consistent": "<yes/no>"
+} 

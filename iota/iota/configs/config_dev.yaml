@@ -1,0 +1,27 @@
+package_dir: project/GREASE-IOTA
+datapath: benchmarks
+dataset: cmcc
+author_key: 0
+
+logging_dir: logs
+output_dir: out
+
+model_type: openai # one of transformers, openai, bedrock 
+
+model_name_or_path: gpt-4o-mini-2024-07-18 # one of [gpt-4o-2024-05-13, gpt-3.5-turbo-0125, gpt-4-0613, gpt-4o-mini-2024-07-18]
+# model_name_or_path: gpt-4o-2024-05-13 # one of [gpt-4o-2024-05-13, gpt-3.5-turbo-0125, gpt-4-0613, gpt-4o-mini-2024-07-18]
+temperature: 1.0
+max_tokens: 4096
+top_p: 0.95
+
+num_train_epochs: 2
+train_size: -1
+num_incontext_examples: 2
+num_undesired_outputs: -1
+seed: 42
+do_eval: true
+do_predict: true
+incontext_selection_strategy: random
+generate_explanations: true
+test: true
+mode: iota

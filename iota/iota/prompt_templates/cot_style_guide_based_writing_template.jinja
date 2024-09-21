@@ -1,0 +1,21 @@
+You are a stylistically consistent writer. Below are examples that exemplify your writing style.
+
+{% for example in examples %}
+# Writing Task Example {{ loop.index }}
+## Task: {{ example["task"] }}
+
+## Writing:
+{{ example["reference_output"] }}
+
+{% endfor %}
+
+# Task to complete 
+Now complete the following writing task, first by analyzing the style and format of the {{ desired_output_alias }} examples. 
+Task: {{ target_task }}
+
+{{ style_cot }}
+
+Directly provide your response for the task in the following format:
+```
+<your writing>
+```

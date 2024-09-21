@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Viewer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        .winner {
+            border: 3px solid green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+
+        <!-- dropdown for selecting benchmark -->
+        <div class="row">
+            <div class="col-12">
+                <label for="benchmark_dropdown" class="form-label">Select a benchmark</label>
+                <select id="benchmark_dropdown" class="form-select"></select>
+            </div>
+        </div>
+
+        <!-- dropdown for selecting df1 -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <label for="df1-dropdown" class="form-label">Select a method for df1</label>
+                <select id="df1-dropdown" class="form-select"></select>
+            </div>
+        </div>
+
+        <!-- dropdown for selecting df2 -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <label for="df2-dropdown" class="form-label">Select a method for df2</label>
+                <select id="df2-dropdown" class="form-select"></select>
+            </div>
+        </div>
+
+        <!-- per author information to help choose which author data to examine -->
+        <div class="row mt-3" id="overall-info-row"></div>
+
+        <!-- dropdown for selecting author ids -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <label for="author-dropdown" class="form-label">Select an author</label>
+                <select id="author-dropdown" class="form-select"></select>
+            </div>
+        </div>
+
+        <!-- submit button -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <button id="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+
+        <!-- info row -->
+        <div class="row mt-3" id="info-row"></div>
+        <div class="row mt-3" id="output-row"></div>
+        <div class="row mt-3" id="nav-row"> 
+            <div class="col-12">
+                <div class="d-flex justify-content-center">
+                    <button id="prev" class="btn btn-primary me-2">Previous</button>
+                    <span id="current-index" class="align-self-center"></span>
+                    <button id="next" class="btn btn-primary ms-2">Next</button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3" id="explanation-row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Model's Explanation</h5>
+                        <p id="explanation" class="card-text"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // hide explanation & nav row until benchmark is selected
+        document.getElementById('explanation-row').style.display = 'none'; 
+        document.getElementById('nav-row').style.display = 'none';
+
+        let currentIndex = 0;
+        let benchmark = '';
+        let df1_name = '';
+        let df2_name = '';
+        let df1_win_rate = 0;
+        let df2_win_rate = 0;
+        let author_id = 0;
+        let author_eval_results =[];  
+        let maxIndex = 0; 
+        let demos = [];
+        let demos_html = [];
+        let demo_index = 0;
+
+        // receive benchmark_to_df_keys from the backend if available
+        const benchmarkToDfKeys = {{ benchmark_to_df_keys | tojson }};
+        console.log(benchmarkToDfKeys);
+
+        // show benchmarkToDfKeys' keys as dropdown options, with title option
+        const benchmark_dropdown = document.getElementById('benchmark_dropdown');
+        const df1Dropdown = document.getElementById('df1-dropdown');
+        const df2Dropdown = document.getElementById('df2-dropdown');
+
+        benchmark_dropdown.innerHTML = `
+            <option value="1">Select a method</option>
+            ${Object.keys(benchmarkToDfKeys).map(key => `<option value="${key}">${key}</option>`).join('')}
+        `;
+        benchmark_dropdown.addEventListener('change', () => {
+            benchmark = benchmark_dropdown.value;
+            const dfKeys = benchmarkToDfKeys[benchmark];
+            console.log(benchmark, dfKeys);
+
+            // show dfKeys as dropdown options for two separate dropdowns 
+            df1Dropdown.innerHTML = `
+                <option value="1">Select a method</option>
+                ${dfKeys.map(key => `<option value="${key}">${key}</option>`).join('')}
+            `;
+            df2Dropdown.innerHTML = `
+                <option value="1">Select a method</option>
+                ${dfKeys.map(key => `<option value="${key}">${key}</option>`).join('')}
+            `;
+        });
+
+        // if both df1 and df2 are selected, show author ids as dropdown options, retrived from the backend /<benchmark>/<df1>/<df2>
+        const authorDropdown = document.getElementById('author-dropdown');
+        
+        function updateAuthorDropdown() {
+
+            console.log('updateAuthorDropdown', benchmark, df1Dropdown.value, df2Dropdown.value);
+
+            df1_name = df1Dropdown.value;
+            df2_name = df2Dropdown.value;
+
+            if (benchmark === '' || df1_name === '' || df2_name ===  '' || df1_name === '1' || df2_name === '1') {
+                return;
+            }
+
+            axios.get(`/${benchmark}/${df1_name}/${df2_name}`)
+                .then(response => {
+                    console.log("author id list data", response.data);
+
+                    if (response.data.error) {
+                        // alert(response.data.error);
+                        error_message = `Comparison results between ${df1_name} and ${df2_name} are not available for this benchmark. Please select another benchmark or methods.`;
+                        alert(error_message);
+                        return; 
+                    }
+
+                    const authorIds = response.data.author_ids; // author ids is a list of integers 
+
+                    authorDropdown.innerHTML = `
+                        <option value="0">Select an author</option>
+                        ${authorIds.map(id => `<option value="${id}">${id}</option>`).join('')}
+                    `;
+
+                    const author_win_rates = response.data.author_win_rates;
+                    // author win rates is a dictionary with author ids as keys and a dictionary with df1 and df2 win rates as values
+                    // create table for author win rates, where author ids is the column keys and the df1 and df2 names are the row keys and the values of each cell is the win rate
+                    author_win_rates_html = `
+                        <div class="col-md-12 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Author Win Rates</h5>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Author ID</th>
+                                                ${Object.keys(author_win_rates).map(author_id => `
+                                                    <th scope="col">${author_id}</th>
+                                                `).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row">${df1_name}</th>
+                                                ${Object.keys(author_win_rates).map(author_id => `
+                                                    <td>${author_win_rates[author_id][df1_name]}%</td>
+                                                `).join('')}
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">${df2_name}</th>
+                                                ${Object.keys(author_win_rates).map(author_id => `
+                                                    <td>${author_win_rates[author_id][df2_name]}%</td>
+                                                `).join('')}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // replace the overall-info-row with the author win rates
+                    document.getElementById('overall-info-row').innerHTML = author_win_rates_html;
+
+                    // clear out 
+                    document.getElementById('info-row').innerHTML = '';
+                    document.getElementById('output-row').innerHTML = '';
+                    document.getElementById('nav-row').style.display = 'none';
+                    document.getElementById('explanation-row').style.display = 'none';
+
+
+                })
+                .catch(error => {
+                    console.error('Error loading author ids:', error);
+                });
+        }
+
+        df1Dropdown.addEventListener('change', updateAuthorDropdown);
+        df2Dropdown.addEventListener('change', updateAuthorDropdown);
+
+
+        // load sample data from the backend when the submit button is clicked
+        document.getElementById('submit').addEventListener('click', () => {
+            // set selected values as global variables
+            benchmark = benchmark_dropdown.value;
+            df1_name = document.getElementById('df1-dropdown').value;
+            df2_name = document.getElementById('df2-dropdown').value;
+            author_id = document.getElementById('author-dropdown').value;
+            currentIndex = 0;
+
+            console.log(benchmark, author_id, df1_name, df2_name, currentIndex);
+            // make sure updateShownSample is called after the samples are loaded
+            loadEvalSamples(benchmark, author_id, df1_name, df2_name)
+                .then(() => {
+                    updateShownSample(currentIndex);
+                });
+        });
+
+        function loadEvalSamples(benchmark, author_id, df1_name, df2_name){
+            return axios.get(`/${benchmark}/${author_id}/${df1_name}/${df2_name}`)
+                .then(response => {
+                    console.log(response.data);
+
+                    // if there is "error" in the response, show the error message and return
+                    if (response.data.error) {
+                        alert(response.data.error);
+                        // replace the output-row with the error message
+                        document.getElementById('output-row').innerHTML = `
+                            <div class="col-md-12 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Error</h5>
+                                        <p class="card-text">${response.data.error}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const data = response.data;
+                    maxIndex = data.last_index;
+                    author_eval_results = data.author_results;
+                    demos = data.demos;
+                    df1_win_rate = data.df1_win_rate;
+                    df2_win_rate = data.df2_win_rate;
+                    df1_win_count = author_eval_results.length * df1_win_rate / 100;
+                    df2_win_count = author_eval_results.length * df2_win_rate / 100;
+
+                    // add the df1 vs df2 information in the output row
+                    info_row = document.getElementById('info-row')
+                    info_row.innerHTML = `
+                        <div class="col-md-12 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Benchmark: ${benchmark} Author ID: ${author_id} | ${df1_name} vs ${df2_name}</h5>
+                                    <p class="card-text">Samples for ${df1_name} wins will appear first.</p>
+                                    <p class="card-text"><strong>${df1_name}</strong> win rate: ${df1_win_rate}% (${df1_win_count} / ${author_eval_results.length})</p>
+                                    <p class="card-text"><strong>${df2_name}</strong> win rate: ${df2_win_rate}% (${df2_win_count} / ${author_eval_results.length})</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // create html for each demo
+                    demos_html = demos.map(demo => `
+                        <div class="col-md-12 mb-3" id="demo">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between">
+                                    <h5 class="card-title d-flex align-self-center" style="text-align: left;">Author Demos</h5>
+                                    <div class="d-flex justify-content-end">
+                                        <button id="demo_prev" class="btn btn-primary me-2" onclick="decrement_demo_index()">Previous</button>
+                                        <span id="demo-index" class="align-self-center"></span>
+                                        <button id="demo_next" class="btn btn-primary ms-2" onclick="increment_demo_index()">Next</button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-center">
+
+                                    </div>
+                                    <div class="d-flex justify-content-center">
+                                        <p class="card-text"><strong>${demo.prompt}</strong></p>
+                                    </div>
+                                    <div class="d-flex justify-content-center" style="height: 300px; overflow-y: scroll;">
+                                        <p class="card-text">${demo.output}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `); 
+
+                    // add demo html 
+                    // prepend the demos to the output-row and make them navigable with next and previous buttons 
+                    // prepend the first demo to the output-row
+                    info_row.innerHTML += demos_html[demo_index] 
+                    document.getElementById('demo-index').innerText = `Demo ${demo_index + 1} / ${demos.length}`;
+
+                })
+                .catch(error => {
+                    console.error('Error loading sample:', error);
+                });
+        }
+
+        function close_popup() {
+            // fade in everything
+            document.querySelectorAll('body > *:not(.popup)').forEach(element => {
+                element.style.transition = '0.5s';
+                element.style.opacity = '1';
+            });
+
+            // remove all popups from the body
+            document.querySelectorAll('.popup').forEach(popup => popup.remove());
+        }
+
+        function show_input_popup(method, text) {
+
+            text = text.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+
+            // show a pop up with the input text that appears in the middle of the screen and fades out the background
+            // it has a close button that closes the pop up and fades in the background
+            popup = document.createElement('div');
+            popup.classList.add('popup');
+            popup.innerHTML = `
+                <div class="col-md-12">
+                    <div class="popup-content">
+                        <span class="close" style="text-align: right; font-size: 20px; cursor: pointer;">&times;</span>
+                        <p class="mb-1"><strong>Input for ${method}</strong></p>
+                        <p>${text}</p>
+                    </div>
+                </div>
+            `;
+            // make content respect the \n and \t characters
+            popup.querySelector('.popup-content').style.whiteSpace = 'pre-line';
+
+            // pop up should be in the center of the screen
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.zIndex = '1';
+            popup.style.width = '50%';
+            popup.style.height = '70%';
+            popup.style.backgroundColor = 'white';
+            popup.style.padding = '20px';
+            popup.style.border = '1px solid black';
+
+            // make popup scrollable
+            popup.style.overflowY = 'scroll';
+
+            // fade out everything except for the pop up
+            document.querySelectorAll('body > *:not(.popup)').forEach(element => {
+                element.style.transition = '0.5s';
+                element.style.opacity = '0.2';
+            });
+
+            document.body.appendChild(popup);
+
+            // close the pop up when the close button is clicked
+            popup.querySelector('.close').addEventListener('click', () => {
+                close_popup();
+            });
+        }
+
+
+        function updateShownSample(index) { 
+            console.log('updateShownSample', index);
+            const data = author_eval_results[index];
+            console.log(data);
+
+            const outputRow = document.getElementById('output-row');
+
+            outputRow.innerHTML = `
+                <div class="col-md-12 mb-3" id="sample_task">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Task</h5>
+                            <p class="card-text">${data.task}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card ${data.winner.toLowerCase() === 'a' ? 'winner' : ''}">
+                        <div class="card-body">
+                            <h5 class="card-title">${data.method_a}
+                                 <span><button id="${data.method_a}" class="btn btn-primary">Input</button></span>
+                            </h5>
+                            <p class="card-text">${data.text_a}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card ${data.winner.toLowerCase() === 'b' ? 'winner' : ''}">
+                        <div class="card-body">
+                            <h5 class="card-title">${data.method_b} 
+                                <span><button id="${data.method_b}" class="btn btn-primary">Input</button></span>
+                            </h5>
+                            <p class="card-text">${data.text_b}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // make the text respect the \n and \t characters
+            outputRow.querySelectorAll('.card-text').forEach(cardText => {
+                cardText.style.whiteSpace = 'pre-line';
+            });
+
+            // make input a and input b pop ups when the input button is clicked
+            document.getElementById(data.method_a).addEventListener('click', () => {
+                show_input_popup(data.method_a, data.input_a);
+            });
+
+            document.getElementById(data.method_b).addEventListener('click', () => {
+                show_input_popup(data.method_b, data.input_b);
+            });
+
+            // close the pop up when anywhere outside of the pop up is clicked
+            window.addEventListener('click', (event) => {
+                //  and also the input buttons are not clicked
+                if (!event.target.classList.contains('popup') && !event.target.classList.contains('btn-primary')) {
+                    close_popup();
+                }
+            });
+
+            console.log(demos);
+            document.getElementById('explanation').innerText = data.explanation;
+            // show the explanation-row & nav-row
+            document.getElementById('explanation-row').style.display = 'block';
+            document.getElementById('nav-row').style.display = 'block';
+
+            // scroll to the top of sample_task 
+            document.getElementById('sample_task').scrollIntoView();
+
+            document.getElementById('current-index').innerText = `Sample ${index + 1} / ${maxIndex + 1}`;
+        }
+
+
+        function decrement_demo_index() {
+            if (demo_index > 0) {
+                demo_index--;
+                document.getElementById('demo').innerHTML = demos_html[demo_index];
+                document.getElementById('demo-index').innerText = `Demo ${demo_index + 1} / ${demos.length}`;
+            }
+        }
+
+        function increment_demo_index() {
+            if (demo_index < demos.length - 1) {
+                demo_index++;
+                document.getElementById('demo').innerHTML = demos_html[demo_index];
+                document.getElementById('demo-index').innerText = `Demo ${demo_index + 1} / ${demos.length}`;
+            }
+        }
+
+        document.getElementById('prev').addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateShownSample(currentIndex);
+            }
+        });
+
+        document.getElementById('next').addEventListener('click', () => {
+            currentIndex++;
+            updateShownSample(currentIndex);
+        });
+
+    </script>
+</body>
+</html>

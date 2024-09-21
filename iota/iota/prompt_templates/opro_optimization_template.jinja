@@ -1,0 +1,27 @@
+I have some instructions along with their corresponding scores. The instructions are arranged in ascending order
+based on their scores, where higher scores indicate better quality.
+
+{% for prompt_score_pair in prompt_score_pairing %}
+instruction: 
+{{ prompt_score_pair[0] }}
+score:
+{{ prompt_score_pair[1] }}
+
+{% endfor %}
+
+The following exemplars show how to apply your instruction: you replace <INS> in each input with your instruction, then read the input and give an output. The scores are the average stylistic similarity score of the generated output, generated with your instruction, compared to the reference output.
+
+{% for example in examples %}
+input:
+{{ example["task"] }}
+<INS>
+output:
+{{ example["reference_output"] }}
+
+{% endfor %}
+
+
+Write your new instruction that is different from the old ones that will help achieve a style similarity score as high as possible. Consider similarity with regards to the (1) length, (2) format, (3) paragraph structure, (4) sentence structure, (5) punctuation, (6) syntax, (7) voice, and (8) diction of exemplar outputs, but NOT the content it covers. The instruction should not mention 'reference output' or 'original input' as only the input and the instruction placed instead of <INS> is available when writing an output. Write your instruction in the following format:
+```
+<your instruction>
+```

@@ -1,0 +1,17 @@
+Given the following written examples, provide a style guide on how you would go about writing in a similar style as the examples for the target task. Analyze the (1) length, (2) format, (3) paragraph structure, (4) sentence structure, (5) punctuation, (6) syntax, (7) voice, and (8) diction of the examples, but NOT the content or topic that they cover.
+
+{% for example in examples %}
+# Writing Task Example {{ loop.index }}
+## Task: {{ example["task"] }}
+
+## Writing:
+{{ example["reference_output"] }}
+{% endfor %}
+
+# Target task
+Task: {{ target_task }}
+
+Provide your style guide with the following format:
+```
+<your style guide>
+```

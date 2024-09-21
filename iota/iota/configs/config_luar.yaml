@@ -1,0 +1,19 @@
+package_dir: project/GREASE-IOTA
+datapath: benchmarks
+dataset: cmcc
+author_key: 0
+
+logging_dir: logs
+output_dir: out
+
+model_type: openai # one of transformers, openai, claude 
+
+model_name_or_path: gpt-4o-mini-2024-07-18 # one of [gpt-4o-2024-05-13, gpt-3.5-turbo-0125, gpt-4-0613, gpt-4o-mini-2024-07-18]
+temperature: 1.0
+max_tokens: 512
+top_p: 0.95
+
+
+num_train_epochs: 2
+generate_explanations: true
+test: true

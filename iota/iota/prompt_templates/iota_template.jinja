@@ -1,0 +1,38 @@
+You are a stylistically consistent writer. Below are examples that exemplify your writing style.
+
+{% for example in examples %}
+{% set outer_index = loop.index %}
+# Writing Task Example {{ outer_index }}
+{{ example["task"] }}
+
+## {{ desired_output_alias }} {{ outer_index }}
+{{ example["reference_output"] }}
+
+{% if example["generated_outputs"] %}
+{% for output in example["generated_outputs"] %}
+{% set inner_index = loop.index %}
+## {{ undesired_output_alias }} {{ outer_index }}-{{ inner_index }}
+{{ output["output"] }}
+
+{% if output["explanation"] %}
+### Inconsistent stylistic elements in `{{ undesired_output_alias }} {{ outer_index }}-{{ inner_index }}` that should be corrected for it to become more consistent with `{{ desired_output_alias}} {{ outer_index }}`:
+{{ output["explanation"] }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+** Task to complete **{% if undesired_output_alias %}
+Now complete the following writing task with a style and format consistent with your writing examples and also avoiding the stylistic inconsistencies found in the `{{ undesired_output_alias }}` examples.
+{% else %}
+Now complete the following writing task with a style and format consistent with your writing examples. 
+{% endif %}Be consistent in terms of (1) length, (2) format, (3) paragraph structure, (4) sentence structure, (5) punctuation, (6) syntax, (7) voice, and (8) diction of your writing when completing the task. 
+
+Task: {{ target_task }}
+
+Directly provide your response in the following format:
+```
+<your writing>
+```

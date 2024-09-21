@@ -1,0 +1,25 @@
+package_dir: project/GREASE-IOTA
+datapath: benchmarks
+dataset: cmcc
+author_key: 1
+
+logging_dir: logs
+output_dir: out
+
+model_type: transformers # one of transformers, openai, claude 
+
+model_name_or_path: mistralai/Mistral-7B-Instruct-v0.2
+
+# generation_params
+temperature: 1.0
+max_tokens: 8192
+
+num_train_epochs: 2
+train_size: 3
+num_incontext_examples: 2
+num_undesired_outputs: -1
+seed: 42
+do_eval: true
+do_predict: true
+incontext_selection_strategy: random
+generate_explanations: true
